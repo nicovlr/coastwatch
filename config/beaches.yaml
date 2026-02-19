@@ -1,0 +1,85 @@
+beaches:
+  - id: biarritz-grande-plage
+    name: "Biarritz - Grande Plage"
+    region: "Pays Basque"
+    coordinates:
+      latitude: 43.4832
+      longitude: -1.5586
+    webcam:
+      # Windy Webcams API - fetch snapshot via API call
+      snapshot_url: "windy://1418028873"
+      type: snapshot
+      refresh_interval_sec: 300
+    metadata:
+      orientation: west
+      surf_spot: true
+
+  - id: biarritz-cote-des-basques
+    name: "Biarritz - Côte des Basques"
+    region: "Pays Basque"
+    coordinates:
+      latitude: 43.4778
+      longitude: -1.5650
+    webcam:
+      snapshot_url: "windy://1649358421"
+      type: snapshot
+      refresh_interval_sec: 300
+    metadata:
+      orientation: west
+      surf_spot: true
+
+  - id: hossegor-seignosse
+    name: "Hossegor - Seignosse Spot Surf"
+    region: "Landes"
+    coordinates:
+      latitude: 43.6615
+      longitude: -1.4430
+    webcam:
+      snapshot_url: "windy://1351009364"
+      type: snapshot
+      refresh_interval_sec: 300
+    metadata:
+      orientation: west
+      surf_spot: true
+
+  - id: hossegor-plage
+    name: "Hossegor - Plage"
+    region: "Landes"
+    coordinates:
+      latitude: 43.6640
+      longitude: -1.4490
+    webcam:
+      snapshot_url: "windy://1351009687"
+      type: snapshot
+      refresh_interval_sec: 300
+    metadata:
+      orientation: west
+      surf_spot: true
+
+  - id: capbreton
+    name: "Capbreton - Hossegor"
+    region: "Landes"
+    coordinates:
+      latitude: 43.6426
+      longitude: -1.4450
+    webcam:
+      snapshot_url: "windy://1301828557"
+      type: snapshot
+      refresh_interval_sec: 300
+    metadata:
+      orientation: west
+      surf_spot: true
+
+  - id: biarritz-port-vieux
+    name: "Biarritz - Port Vieux"
+    region: "Pays Basque"
+    coordinates:
+      latitude: 43.4820
+      longitude: -1.5610
+    webcam:
+      snapshot_url: "windy://1460843866"
+      type: snapshot
+      refresh_interval_sec: 300
+    metadata:
+      orientation: west
+      surf_spot: false

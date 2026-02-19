@@ -1,0 +1,24 @@
+capture:
+  default_interval_sec: 300
+  max_concurrent_captures: 4
+  request_timeout_sec: 15.0
+  max_retries: 3
+  retry_backoff_sec: 5.0
+
+opencv:
+  enabled: true
+
+claude:
+  enabled: true
+  model: "claude-sonnet-4-20250514"
+  max_tokens: 1024
+  temperature: 0.1
+  rate_limit_rpm: 30
+  rate_limit_daily: 500
+
+storage:
+  database_path: "~/.coastwatch/coastwatch.db"
+
+logging:
+  level: "INFO"
+  file: "~/.coastwatch/coastwatch.log"
