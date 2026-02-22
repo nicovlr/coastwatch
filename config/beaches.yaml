@@ -1,4 +1,47 @@
 beaches:
+  # --- Pays Basque ---
+  - id: hendaye
+    name: "Hendaye - Plage des Jumeaux"
+    region: "Pays Basque"
+    coordinates:
+      latitude: 43.3708
+      longitude: -1.7764
+    webcam:
+      snapshot_url: "windy://1351011092"
+      type: snapshot
+      refresh_interval_sec: 300
+    metadata:
+      orientation: west
+      surf_spot: true
+
+  - id: guethary
+    name: "Guéthary - Parlementia"
+    region: "Pays Basque"
+    coordinates:
+      latitude: 43.4244
+      longitude: -1.6089
+    webcam:
+      snapshot_url: "windy://1398879615"
+      type: snapshot
+      refresh_interval_sec: 300
+    metadata:
+      orientation: west
+      surf_spot: true
+
+  - id: bidart
+    name: "Bidart"
+    region: "Pays Basque"
+    coordinates:
+      latitude: 43.4389
+      longitude: -1.5897
+    webcam:
+      snapshot_url: "windy://1663997163"
+      type: snapshot
+      refresh_interval_sec: 300
+    metadata:
+      orientation: west
+      surf_spot: true
+
   - id: biarritz-grande-plage
     name: "Biarritz - Grande Plage"
     region: "Pays Basque"
@@ -6,42 +49,28 @@ beaches:
       latitude: 43.4832
       longitude: -1.5586
     webcam:
-      # Windy Webcams API - fetch snapshot via API call
-      snapshot_url: "windy://1418028873"
+      snapshot_url: "windy://1334228796"
       type: snapshot
       refresh_interval_sec: 300
     metadata:
       orientation: west
       surf_spot: true
 
-  - id: biarritz-cote-des-basques
-    name: "Biarritz - Côte des Basques"
+  - id: anglet-chambre-amour
+    name: "Anglet - Chambre d'Amour"
     region: "Pays Basque"
     coordinates:
-      latitude: 43.4778
-      longitude: -1.5650
+      latitude: 43.4950
+      longitude: -1.5350
     webcam:
-      snapshot_url: "windy://1649358421"
+      snapshot_url: "windy://1756587913"
       type: snapshot
       refresh_interval_sec: 300
     metadata:
       orientation: west
       surf_spot: true
 
-  - id: hossegor-seignosse
-    name: "Hossegor - Seignosse Spot Surf"
-    region: "Landes"
-    coordinates:
-      latitude: 43.6615
-      longitude: -1.4430
-    webcam:
-      snapshot_url: "windy://1351009364"
-      type: snapshot
-      refresh_interval_sec: 300
-    metadata:
-      orientation: west
-      surf_spot: true
-
+  # --- Landes ---
   - id: hossegor-plage
     name: "Hossegor - Plage"
     region: "Landes"
@@ -57,29 +86,58 @@ beaches:
       surf_spot: true
 
   - id: capbreton
-    name: "Capbreton - Hossegor"
+    name: "Capbreton"
     region: "Landes"
     coordinates:
       latitude: 43.6426
       longitude: -1.4450
     webcam:
-      snapshot_url: "windy://1301828557"
+      snapshot_url: "windy://1398879179"
       type: snapshot
       refresh_interval_sec: 300
     metadata:
       orientation: west
       surf_spot: true
 
-  - id: biarritz-port-vieux
-    name: "Biarritz - Port Vieux"
-    region: "Pays Basque"
+  - id: moliets
+    name: "Moliets - Plage"
+    region: "Landes"
     coordinates:
-      latitude: 43.4820
-      longitude: -1.5610
+      latitude: 43.8500
+      longitude: -1.3833
     webcam:
-      snapshot_url: "windy://1460843866"
+      snapshot_url: "windy://1441921518"
       type: snapshot
       refresh_interval_sec: 300
     metadata:
       orientation: west
-      surf_spot: false
+      surf_spot: true
+
+  - id: mimizan
+    name: "Mimizan - Plage"
+    region: "Landes"
+    coordinates:
+      latitude: 44.2167
+      longitude: -1.2933
+    webcam:
+      snapshot_url: "windy://1351009347"
+      type: snapshot
+      refresh_interval_sec: 300
+    metadata:
+      orientation: west
+      surf_spot: true
+
+  # --- Gironde ---
+  - id: lacanau
+    name: "Lacanau - Plage Centrale"
+    region: "Gironde"
+    coordinates:
+      latitude: 44.9783
+      longitude: -1.1983
+    webcam:
+      snapshot_url: "windy://1334243162"
+      type: snapshot
+      refresh_interval_sec: 300
+    metadata:
+      orientation: west
+      surf_spot: true

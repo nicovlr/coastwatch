@@ -1,15 +1,15 @@
-"""CoastWatch CLI entrypoint."""
+"""BAYWATCH CLI entrypoint."""
 
 from __future__ import annotations
 
-import asyncio
 import logging
-import sys
 
 import click
 
+# Suppress noisy httpx request logs in normal mode
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
 from coastwatch.config.loader import load_beaches, load_settings, resolve_path
-from coastwatch.config.models import AppSettings, BeachConfig
 from coastwatch.storage.database import Database
 from coastwatch.storage.repository import ObservationRepository
 
@@ -45,7 +45,7 @@ def build_context(config_path: str | None, settings_path: str | None) -> dict:
 @click.option("--verbose", "-v", is_flag=True, help="Enable debug logging")
 @click.pass_context
 def cli(ctx: click.Context, config: str | None, settings: str | None, verbose: bool) -> None:
-    """CoastWatch - Beach conditions monitoring for the French Atlantic coast."""
+    """BAYWATCH — Beach conditions monitoring for the French Atlantic coast."""
     setup_logging("DEBUG" if verbose else "INFO")
     ctx.ensure_object(dict)
     ctx.obj.update(build_context(config, settings))
@@ -56,10 +56,14 @@ from coastwatch.cli.commands.beaches import beaches  # noqa: E402
 from coastwatch.cli.commands.best import best  # noqa: E402
 from coastwatch.cli.commands.capture import capture  # noqa: E402
 from coastwatch.cli.commands.history import history  # noqa: E402
+from coastwatch.cli.commands.export import export  # noqa: E402
 from coastwatch.cli.commands.status import status  # noqa: E402
+from coastwatch.cli.commands.train import train  # noqa: E402
 
 cli.add_command(beaches)
 cli.add_command(best)
 cli.add_command(capture)
+cli.add_command(export)
 cli.add_command(history)
 cli.add_command(status)
+cli.add_command(train)

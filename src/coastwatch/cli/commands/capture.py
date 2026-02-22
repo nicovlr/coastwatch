@@ -7,9 +7,11 @@ import asyncio
 import click
 from rich.console import Console
 
-from coastwatch.analysis.opencv_analyzer import OpenCVAnalyzer
+from coastwatch.analysis.opencv_analyzer import ImageAnalyzer
+from coastwatch.analysis.person_detector import PersonDetector
 from coastwatch.analysis.pipeline import AnalysisPipeline
 from coastwatch.analysis.vision_client import VisionClient
+from coastwatch.analysis.weather_client import WeatherClient
 from coastwatch.capture.grabber import FrameGrabber
 from coastwatch.capture.scheduler import CaptureScheduler
 from coastwatch.common.rate_limiter import TokenBucketRateLimiter
@@ -18,7 +20,7 @@ from coastwatch.common.rate_limiter import TokenBucketRateLimiter
 @click.command()
 @click.option("--once", is_flag=True, help="Run a single capture cycle and exit")
 @click.option("--beach", "-b", multiple=True, help="Specific beach IDs (default: all)")
-@click.option("--no-ai", is_flag=True, help="Skip Claude Vision, only run OpenCV")
+@click.option("--no-ai", is_flag=True, help="Skip Claude Vision, only run local analysis + YOLO + weather")
 @click.pass_context
 def capture(ctx: click.Context, once: bool, beach: tuple[str, ...], no_ai: bool) -> None:
     """Capture and analyze beach conditions."""
@@ -33,8 +35,19 @@ def capture(ctx: click.Context, once: bool, beach: tuple[str, ...], no_ai: bool)
         max_retries=settings.capture.max_retries,
         backoff=settings.capture.retry_backoff_sec,
     )
-    opencv = OpenCVAnalyzer(settings.opencv)
+    image_analyzer = ImageAnalyzer(settings.opencv, settings.camera)
 
+    # Person detector (YOLO)
+    person_detector = None
+    if settings.yolo.enabled:
+        person_detector = PersonDetector(settings.yolo)
+
+    # Weather client
+    weather_client = None
+    if settings.weather_api.enabled:
+        weather_client = WeatherClient(settings.weather_api)
+
+    # Vision client (Claude)
     vision_client = None
     if not no_ai and settings.claude.enabled:
         rate_limiter = TokenBucketRateLimiter(
@@ -43,7 +56,12 @@ def capture(ctx: click.Context, once: bool, beach: tuple[str, ...], no_ai: bool)
         )
         vision_client = VisionClient(settings.claude, rate_limiter)
 
-    pipeline = AnalysisPipeline(opencv, vision_client)
+    pipeline = AnalysisPipeline(
+        image_analyzer=image_analyzer,
+        person_detector=person_detector,
+        weather_client=weather_client,
+        vision_client=vision_client,
+    )
     scheduler = CaptureScheduler(
         beaches=beaches,
         grabber=grabber,
@@ -53,7 +71,11 @@ def capture(ctx: click.Context, once: bool, beach: tuple[str, ...], no_ai: bool)
     )
 
     beach_ids = list(beach) if beach else None
-    mode_str = "OpenCV only" if no_ai else "OpenCV + Claude Vision"
+    components = ["YOLO" if person_detector else None,
+                  "Weather API" if weather_client else None,
+                  "Claude Vision" if vision_client else None]
+    active = [c for c in components if c]
+    mode_str = " + ".join(active) if active else "local analysis only"
 
     if once:
         console.print(f"[bold]Capturing[/bold] ({mode_str})...")

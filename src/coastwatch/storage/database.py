@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 import sqlite3
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS observations (
@@ -12,20 +15,34 @@ CREATE TABLE IF NOT EXISTS observations (
     captured_at     TEXT NOT NULL,
     source_url      TEXT NOT NULL,
 
-    -- OpenCV numeric features
-    cv_crowd_count      INTEGER,
-    cv_crowd_level      TEXT,
-    cv_crowd_confidence REAL,
+    -- Camera status
+    camera_status       TEXT,
+    camera_status_reason TEXT,
+
+    -- Person detection (YOLO)
+    person_count        INTEGER,
+    person_confidence   REAL,
+    detection_method    TEXT,
+
+    -- Local image analysis (waves only)
     cv_wave_level       TEXT,
     cv_whitecap_ratio   REAL,
     cv_edge_density     REAL,
     cv_wave_confidence  REAL,
-    cv_weather_condition TEXT,
-    cv_brightness       REAL,
-    cv_blue_ratio       REAL,
-    cv_visibility       TEXT,
-    cv_weather_confidence REAL,
     cv_image_quality    REAL,
+
+    -- Weather API data
+    weather_temperature_c   REAL,
+    weather_feels_like_c    REAL,
+    weather_humidity_pct    INTEGER,
+    weather_wind_speed_kmh  REAL,
+    weather_wind_direction  TEXT,
+    weather_wind_gust_kmh   REAL,
+    weather_condition       TEXT,
+    weather_description     TEXT,
+    weather_precipitation_mm REAL,
+    weather_visibility_km   REAL,
+    weather_uv_index        REAL,
 
     -- Claude Vision analysis (nullable)
     ai_crowd_level          TEXT,
@@ -42,6 +59,10 @@ CREATE TABLE IF NOT EXISTS observations (
     ai_wind_direction       TEXT,
     ai_visibility           TEXT,
     ai_weather_notes        TEXT,
+    ai_current_danger_level TEXT,
+    ai_current_rip_detected INTEGER,
+    ai_current_indicators   TEXT,
+    ai_current_notes        TEXT,
     ai_beach_score          REAL,
     ai_surf_score           REAL,
     ai_summary              TEXT,
@@ -72,6 +93,30 @@ CREATE TABLE IF NOT EXISTS beaches (
 );
 """
 
+# ALTER TABLE statements for migrating from v0.1.0 schema
+MIGRATION_COLUMNS = [
+    ("camera_status", "TEXT"),
+    ("camera_status_reason", "TEXT"),
+    ("person_count", "INTEGER"),
+    ("person_confidence", "REAL"),
+    ("detection_method", "TEXT"),
+    ("weather_temperature_c", "REAL"),
+    ("weather_feels_like_c", "REAL"),
+    ("weather_humidity_pct", "INTEGER"),
+    ("weather_wind_speed_kmh", "REAL"),
+    ("weather_wind_direction", "TEXT"),
+    ("weather_wind_gust_kmh", "REAL"),
+    ("weather_condition", "TEXT"),
+    ("weather_description", "TEXT"),
+    ("weather_precipitation_mm", "REAL"),
+    ("weather_visibility_km", "REAL"),
+    ("weather_uv_index", "REAL"),
+    ("ai_current_danger_level", "TEXT"),
+    ("ai_current_rip_detected", "INTEGER"),
+    ("ai_current_indicators", "TEXT"),
+    ("ai_current_notes", "TEXT"),
+]
+
 
 class Database:
     """SQLite connection manager."""
@@ -91,8 +136,20 @@ class Database:
         return self._conn
 
     def ensure_schema(self) -> None:
-        """Create tables if they don't exist."""
+        """Create tables if they don't exist, then run migrations."""
         self.conn.executescript(SCHEMA_SQL)
+        self._migrate()
+
+    def _migrate(self) -> None:
+        """Add new columns to existing observations table if missing."""
+        existing = {
+            row[1] for row in self.conn.execute("PRAGMA table_info(observations)").fetchall()
+        }
+        for col_name, col_type in MIGRATION_COLUMNS:
+            if col_name not in existing:
+                self.conn.execute(f"ALTER TABLE observations ADD COLUMN {col_name} {col_type}")
+                logger.info("Migration: added column observations.%s", col_name)
+        self.conn.commit()
 
     def close(self) -> None:
         if self._conn:

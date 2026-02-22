@@ -13,13 +13,12 @@ from rich.table import Table
 def beaches(ctx: click.Context, region: str | None) -> None:
     """List all configured beaches."""
     beach_list = ctx.obj["beaches"]
-    repo = ctx.obj["repo"]
 
     if region:
         beach_list = [b for b in beach_list if region.lower() in b.region.lower()]
 
     console = Console()
-    table = Table(title="CoastWatch - Configured Beaches")
+    table = Table(title="BAYWATCH — Configured Beaches")
     table.add_column("ID", style="cyan")
     table.add_column("Name", style="bold")
     table.add_column("Region", style="green")

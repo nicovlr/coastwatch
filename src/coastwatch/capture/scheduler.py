@@ -6,6 +6,7 @@ import asyncio
 import logging
 import signal
 import time
+from pathlib import Path
 
 from coastwatch.analysis.pipeline import AnalysisPipeline
 from coastwatch.capture.grabber import FrameGrabber
@@ -13,6 +14,8 @@ from coastwatch.config.models import BeachConfig
 from coastwatch.storage.repository import ObservationRepository
 
 logger = logging.getLogger(__name__)
+
+FRAMES_DIR = Path("~/.coastwatch/frames").expanduser()
 
 
 class CaptureScheduler:
@@ -25,6 +28,7 @@ class CaptureScheduler:
         pipeline: AnalysisPipeline,
         repository: ObservationRepository,
         default_interval: int = 300,
+        save_frames: bool = True,
     ):
         self._beaches = beaches
         self._grabber = grabber
@@ -32,6 +36,21 @@ class CaptureScheduler:
         self._repo = repository
         self._default_interval = default_interval
         self._running = False
+        self._save_frames = save_frames
+
+    def _save_frame(self, beach_id: str, image_bytes: bytes, captured_at: str) -> Path | None:
+        """Save frame to ~/.coastwatch/frames/<beach_id>/<timestamp>.jpg"""
+        try:
+            beach_dir = FRAMES_DIR / beach_id
+            beach_dir.mkdir(parents=True, exist_ok=True)
+            # Sanitize timestamp for filename: 2026-02-22T17:28:04+00:00 -> 2026-02-22_17-28-04
+            ts = captured_at[:19].replace(":", "-").replace("T", "_")
+            path = beach_dir / f"{ts}.jpg"
+            path.write_bytes(image_bytes)
+            return path
+        except Exception as e:
+            logger.warning("Failed to save frame for %s: %s", beach_id, e)
+            return None
 
     async def run_once(self, beach_ids: list[str] | None = None, use_ai: bool = True) -> list[str]:
         """Execute a single capture-and-analyze cycle. Returns successful beach IDs."""
@@ -49,6 +68,10 @@ class CaptureScheduler:
 
             beach = next(b for b in beaches if b.id == result.beach_id)
             try:
+                # Save frame to disk
+                if self._save_frames:
+                    self._save_frame(result.beach_id, result.frame.image_bytes, result.frame.captured_at)
+
                 obs = await self._pipeline.process_frame(result.frame, beach, use_ai=use_ai)
                 self._repo.save(obs)
                 successful.append(result.beach_id)

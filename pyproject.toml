@@ -1,11 +1,12 @@
 [project]
 name = "coastwatch"
-version = "0.1.0"
-description = "Beach conditions monitoring CLI for the French Atlantic coast"
+version = "0.2.0"
+description = "BAYWATCH — Beach conditions monitoring CLI for the French Atlantic coast"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 dependencies = [
     "anthropic>=0.40.0",
+    "astral>=3.2",
     "click>=8.1.0",
     "httpx>=0.27.0",
     "numpy>=1.26.0",
@@ -14,9 +15,11 @@ dependencies = [
     "pydantic>=2.5.0",
     "pyyaml>=6.0.0",
     "rich>=13.0.0",
+    "ultralytics>=8.1.0",
 ]
 
 [project.scripts]
+baywatch = "coastwatch.cli.app:cli"
 coastwatch = "coastwatch.cli.app:cli"
 
 [build-system]

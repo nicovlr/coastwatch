@@ -7,3 +7,5 @@ build/
 *.db
 *.log
 .venv/
+*.pt
+runs/

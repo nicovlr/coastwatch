@@ -42,5 +42,13 @@ class RateLimitError(CoastwatchError):
     """Daily API budget exhausted."""
 
 
+class WeatherAPIError(CoastwatchError):
+    """OpenWeatherMap API call failed."""
+
+    def __init__(self, message: str, status_code: int | None = None):
+        self.status_code = status_code
+        super().__init__(f"Weather API error: {message}")
+
+
 class DatabaseError(CoastwatchError):
     """SQLite operation failed."""

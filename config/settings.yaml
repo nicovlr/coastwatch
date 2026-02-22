@@ -8,6 +8,21 @@ capture:
 opencv:
   enabled: true
 
+yolo:
+  enabled: true
+  model: "yolov8n.pt"
+  confidence_threshold: 0.25
+
+weather_api:
+  enabled: true
+  cache_ttl_sec: 600
+
+camera:
+  use_solar: true
+  brightness_offline_threshold: 10
+  brightness_night_threshold: 20
+  solid_color_std_threshold: 5.0
+
 claude:
   enabled: true
   model: "claude-sonnet-4-20250514"

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from datetime import datetime
 
 from coastwatch.storage.database import Database
 
@@ -15,20 +14,31 @@ class Observation:
     beach_id: str
     captured_at: str
     source_url: str = ""
-    # OpenCV
-    cv_crowd_count: int | None = None
-    cv_crowd_level: str | None = None
-    cv_crowd_confidence: float | None = None
+    # Camera status
+    camera_status: str | None = None
+    camera_status_reason: str | None = None
+    # Person detection (YOLO)
+    person_count: int | None = None
+    person_confidence: float | None = None
+    detection_method: str | None = None
+    # Local image analysis (waves)
     cv_wave_level: str | None = None
     cv_whitecap_ratio: float | None = None
     cv_edge_density: float | None = None
     cv_wave_confidence: float | None = None
-    cv_weather_condition: str | None = None
-    cv_brightness: float | None = None
-    cv_blue_ratio: float | None = None
-    cv_visibility: str | None = None
-    cv_weather_confidence: float | None = None
     cv_image_quality: float | None = None
+    # Weather API
+    weather_temperature_c: float | None = None
+    weather_feels_like_c: float | None = None
+    weather_humidity_pct: int | None = None
+    weather_wind_speed_kmh: float | None = None
+    weather_wind_direction: str | None = None
+    weather_wind_gust_kmh: float | None = None
+    weather_condition: str | None = None
+    weather_description: str | None = None
+    weather_precipitation_mm: float | None = None
+    weather_visibility_km: float | None = None
+    weather_uv_index: float | None = None
     # Claude Vision
     ai_crowd_level: str | None = None
     ai_crowd_count: int | None = None
@@ -44,6 +54,10 @@ class Observation:
     ai_wind_direction: str | None = None
     ai_visibility: str | None = None
     ai_weather_notes: str | None = None
+    ai_current_danger_level: str | None = None
+    ai_current_rip_detected: bool | None = None
+    ai_current_indicators: list[str] = field(default_factory=list)
+    ai_current_notes: str | None = None
     ai_beach_score: float | None = None
     ai_surf_score: float | None = None
     ai_summary: str | None = None
@@ -64,41 +78,57 @@ class ObservationRepository:
     def save(self, obs: Observation) -> int:
         """Insert a new observation. Returns row id."""
         best_for_json = json.dumps(obs.ai_best_for) if obs.ai_best_for else None
+        indicators_json = json.dumps(obs.ai_current_indicators) if obs.ai_current_indicators else None
+        rip_int = int(obs.ai_current_rip_detected) if obs.ai_current_rip_detected is not None else None
         cursor = self._db.conn.execute(
             """INSERT INTO observations (
                 beach_id, captured_at, source_url,
-                cv_crowd_count, cv_crowd_level, cv_crowd_confidence,
+                camera_status, camera_status_reason,
+                person_count, person_confidence, detection_method,
                 cv_wave_level, cv_whitecap_ratio, cv_edge_density, cv_wave_confidence,
-                cv_weather_condition, cv_brightness, cv_blue_ratio, cv_visibility, cv_weather_confidence,
                 cv_image_quality,
+                weather_temperature_c, weather_feels_like_c, weather_humidity_pct,
+                weather_wind_speed_kmh, weather_wind_direction, weather_wind_gust_kmh,
+                weather_condition, weather_description, weather_precipitation_mm,
+                weather_visibility_km, weather_uv_index,
                 ai_crowd_level, ai_crowd_count, ai_crowd_distribution, ai_crowd_notes,
                 ai_wave_size, ai_wave_quality, ai_wave_type, ai_wave_period, ai_wave_notes,
                 ai_weather_condition, ai_wind_estimate, ai_wind_direction, ai_visibility, ai_weather_notes,
+                ai_current_danger_level, ai_current_rip_detected, ai_current_indicators, ai_current_notes,
                 ai_beach_score, ai_surf_score, ai_summary, ai_best_for,
                 analysis_model, processing_time_ms, error_message
             ) VALUES (
                 ?, ?, ?,
+                ?, ?,
                 ?, ?, ?,
                 ?, ?, ?, ?,
-                ?, ?, ?, ?, ?,
                 ?,
+                ?, ?, ?,
+                ?, ?, ?,
+                ?, ?, ?,
+                ?, ?,
                 ?, ?, ?, ?,
                 ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?,
+                ?, ?, ?, ?,
                 ?, ?, ?, ?,
                 ?, ?, ?
             )""",
             (
                 obs.beach_id, obs.captured_at, obs.source_url,
-                obs.cv_crowd_count, obs.cv_crowd_level, obs.cv_crowd_confidence,
+                obs.camera_status, obs.camera_status_reason,
+                obs.person_count, obs.person_confidence, obs.detection_method,
                 obs.cv_wave_level, obs.cv_whitecap_ratio, obs.cv_edge_density, obs.cv_wave_confidence,
-                obs.cv_weather_condition, obs.cv_brightness, obs.cv_blue_ratio, obs.cv_visibility,
-                obs.cv_weather_confidence,
                 obs.cv_image_quality,
+                obs.weather_temperature_c, obs.weather_feels_like_c, obs.weather_humidity_pct,
+                obs.weather_wind_speed_kmh, obs.weather_wind_direction, obs.weather_wind_gust_kmh,
+                obs.weather_condition, obs.weather_description, obs.weather_precipitation_mm,
+                obs.weather_visibility_km, obs.weather_uv_index,
                 obs.ai_crowd_level, obs.ai_crowd_count, obs.ai_crowd_distribution, obs.ai_crowd_notes,
                 obs.ai_wave_size, obs.ai_wave_quality, obs.ai_wave_type, obs.ai_wave_period, obs.ai_wave_notes,
                 obs.ai_weather_condition, obs.ai_wind_estimate, obs.ai_wind_direction, obs.ai_visibility,
                 obs.ai_weather_notes,
+                obs.ai_current_danger_level, rip_int, indicators_json, obs.ai_current_notes,
                 obs.ai_beach_score, obs.ai_surf_score, obs.ai_summary, best_for_json,
                 obs.analysis_model, obs.processing_time_ms, obs.error_message,
             ),
@@ -110,7 +140,18 @@ class ObservationRepository:
         d = dict(row)
         best_for_raw = d.pop("ai_best_for", None)
         d["ai_best_for"] = json.loads(best_for_raw) if best_for_raw else []
+        indicators_raw = d.pop("ai_current_indicators", None)
+        d["ai_current_indicators"] = json.loads(indicators_raw) if indicators_raw else []
+        rip_raw = d.pop("ai_current_rip_detected", None)
+        d["ai_current_rip_detected"] = bool(rip_raw) if rip_raw is not None else None
         d.pop("created_at", None)
+        # Handle legacy columns from v0.1.0 that no longer exist in Observation
+        for legacy_col in (
+            "cv_crowd_count", "cv_crowd_level", "cv_crowd_confidence",
+            "cv_weather_condition", "cv_brightness", "cv_blue_ratio",
+            "cv_visibility", "cv_weather_confidence",
+        ):
+            d.pop(legacy_col, None)
         return Observation(**d)
 
     def get_latest(self, beach_id: str) -> Observation | None:

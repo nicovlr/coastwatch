@@ -45,9 +45,6 @@ class CaptureSettings(BaseModel):
 
 class OpenCVSettings(BaseModel):
     enabled: bool = True
-    crowd_blob_min_area: int = 200
-    crowd_blob_max_area: int = 5000
-    crowd_min_circularity: float = 0.3
     wave_canny_threshold_low: int = 50
     wave_canny_threshold_high: int = 150
     wave_min_contour_length: int = 100
@@ -55,6 +52,25 @@ class OpenCVSettings(BaseModel):
     brightness_sunny_threshold: int = 170
     brightness_overcast_threshold: int = 100
     blue_channel_clear_sky_min: int = 140
+
+
+class YOLOSettings(BaseModel):
+    enabled: bool = True
+    model: str = "yolov8n.pt"
+    confidence_threshold: float = 0.25
+    person_class_id: int = 0
+
+
+class WeatherAPISettings(BaseModel):
+    enabled: bool = True
+    cache_ttl_sec: int = 600  # 10 minutes
+
+
+class CameraSettings(BaseModel):
+    use_solar: bool = True
+    brightness_offline_threshold: int = 10
+    brightness_night_threshold: int = 20
+    solid_color_std_threshold: float = 5.0
 
 
 class ClaudeSettings(BaseModel):
@@ -78,6 +94,9 @@ class LoggingSettings(BaseModel):
 class AppSettings(BaseModel):
     capture: CaptureSettings = CaptureSettings()
     opencv: OpenCVSettings = OpenCVSettings()
+    yolo: YOLOSettings = YOLOSettings()
+    weather_api: WeatherAPISettings = WeatherAPISettings()
+    camera: CameraSettings = CameraSettings()
     claude: ClaudeSettings = ClaudeSettings()
     storage: StorageSettings = StorageSettings()
     logging: LoggingSettings = LoggingSettings()
